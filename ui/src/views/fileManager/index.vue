@@ -3,15 +3,20 @@ div.flex.p-3.h-full
   div.rounded-sm.border-black.border-2(class="w-1/4")
     ComItems(:items="items")
   div.rounded-sm.border-black.border-2(class="w-3/4")
+    div#editor(class="h-full")
 </template>
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent,onMounted } from "vue";
 import ComItems from "./components/items/index.vue";
 import { StepBackwardFilled } from "@ant-design/icons-vue";
 import { ITEM_TYPE,Item } from "@/interface/item";
+import {initYaml} from '@/utils/yaml-monaco';
 export default defineComponent({
   components: { ComItems, StepBackwardFilled },
   setup() {
+    onMounted(() => {
+     initYaml('#editor')
+    })
     return {
       items:[
       {

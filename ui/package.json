@@ -8,6 +8,7 @@
   "dependencies": {
     "@ant-design/icons-vue": "^6.0.1",
     "ant-design-vue": "2.2.0",
+    "monaco-editor": "^0.26.1",
     "vue": "^3.0.5",
     "vue-router": "4"
   },
@@ -15,6 +16,7 @@
     "@types/node": "^16.0.1",
     "@vitejs/plugin-vue": "^1.2.4",
     "@vue/compiler-sfc": "^3.0.5",
+    "autoprefixer": "^10.3.1",
     "pug": "^3.0.2",
     "stylus": "^0.54.8",
     "tailwindcss": "^2.2.4",
