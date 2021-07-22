@@ -1,0 +1,44 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build --format umd,esm",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "mock-monkey-editor",
+  "author": "zxx",
+  "module": "dist/mock-monkey-editor.esm.js",
+  "devDependencies": {
+    "husky": "^6.0.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.25.2"
+  }
+}
