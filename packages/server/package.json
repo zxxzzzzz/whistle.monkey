@@ -30,7 +30,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "@zhangxin/whistle.mock-monkey",
+  "name": "@zhangxin/whistle.monkey",
   "author": "zxx",
   "module": "dist/server.esm.js",
   "size-limit": [
