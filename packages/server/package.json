@@ -31,7 +31,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "server",
+  "name": "mock-monkey-server",
   "author": "zxx",
   "module": "dist/server.esm.js",
   "size-limit": [
@@ -51,12 +51,17 @@
     "tsdx": "^0.14.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5",
-    "mock-monkey-file": "^0.1.0"
+    "mock-monkey-core": "^1.0.1"
   },
   "dependencies": {
+    "@koa/cors": "^3.1.0",
     "@koa/router": "^10.1.0",
     "@types/koa": "^2.13.4",
     "@types/koa__router": "^8.0.7",
-    "koa": "^2.13.1"
+    "chokidar": "^3.5.2",
+    "koa": "^2.13.1",
+    "koa-better-serve": "^2.0.7",
+    "koa-body": "^4.2.0",
+    "yaml": "^1.10.2"
   }
 }

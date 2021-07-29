@@ -1,11 +1,15 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
 import YAML from 'yaml';
-import { addRule, deleteRule,deleteQuery } from './rule';
+import { addRule, deleteRule, deleteQuery } from './rule';
+export { getRuleByUrl, getRule } from './rule'
 
-export function watch(watchPath: string) {
-  chokidar.watch(watchPath).on('all', (eventName, path) => {
-    console.log(eventName, path);
+let currentWatcher:chokidar.FSWatcher
+export async function watch(watchPath: string) {
+  if(currentWatcher){
+    await currentWatcher.close()
+  }
+  currentWatcher = chokidar.watch(watchPath).on('all', (eventName, path) => {
     if (eventName === 'add') {
       addFile(path);
     }
@@ -24,7 +28,7 @@ export function watch(watchPath: string) {
 function getObjFromYAML(filePath: string) {
   try {
     const content = fs.readFileSync(filePath, { encoding: 'utf-8' });
-    return YAML.parse(content);
+    return {...YAML.parse(content), filePath};
   } catch (error) {
     return null;
   }

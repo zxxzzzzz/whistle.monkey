@@ -68,25 +68,6 @@ var reserveFunctions = {
   fk: faker
 };
 
-// let scope = {} as Obj<any> 
-// export function addValue(key:string,value:any){
-//   scope[key] = value
-// }
-// export function deleteValue(key:string){
-//   scope[key] = undefined
-// }
-// export function clearScope(){
-//   scope = {} as Obj<any>
-// }
-// export function addScope(addScope:Obj<any> ={}){
-//   scope = {...scope, ...addScope}
-// }
-// export function getScopeValue(key:string){
-//   return scope[key]
-// }
-// export function getScope(){
-//   return {...scope}
-// }
 const scope = /*#__PURE__*/new Map();
 function addValue(key, value) {
   scope.set(key, value);
@@ -270,4 +251,4 @@ function generate(body, scope = {}) {
 }
 
 export { addFunction, generate, getValue as getValueByStatement };
-//# sourceMappingURL=mock-monkey.esm.js.map
+//# sourceMappingURL=mock-monkey-core.esm.js.map

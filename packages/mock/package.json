@@ -20,7 +20,6 @@
     "lint": "tsdx lint",
     "prepare": "tsdx build"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
@@ -32,7 +31,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "@zhangxin/mock-monkey",
+  "name": "mock-monkey-core",
   "author": "zxx",
   "module": "dist/mock-monkey.esm.js",
   "devDependencies": {
