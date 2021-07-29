@@ -15,7 +15,8 @@
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build"
+    "prepare": "tsdx build",
+    "dev":"node ./dist/index.js"
   },
   "peerDependencies": {},
   "husky": {
@@ -33,9 +34,14 @@
   "author": "zxx",
   "module": "dist/mock-monkey-file.esm.js",
   "devDependencies": {
+    "@types/node": "^16.4.3",
     "husky": "^7.0.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.2",
+    "yaml": "^1.10.2"
   }
 }
