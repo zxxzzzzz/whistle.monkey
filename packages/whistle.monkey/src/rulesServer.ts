@@ -8,6 +8,7 @@ export default (server:any) => {
   app.use((ctx) => {
     const href = ctx.request.href
     const rule = getRuleByUrl(href)
+    console.log(href);
     if(rule){
       const sendStr = encodeURIComponent(rule.filePath)
       ctx.body = `* monkey://${sendStr}`

@@ -1,0 +1,2 @@
+^http://* monkey://  excludeFilter://.js  excludeFilter://.css  excludeFilter://.html excludeFilter://m:options
+^https://* monkey://  excludeFilter://.js  excludeFilter://.css  excludeFilter://.html excludeFilter://m:options

@@ -1,0 +1,19 @@
+0 silly argv {
+0 silly argv   _: [ 'run' ],
+0 silly argv   scope: 'package*',
+0 silly argv   lernaVersion: '4.0.0',
+0 silly argv   '$0': 'C:\\Users\\81260\\AppData\\Roaming\\npm\\node_modules\\lerna\\cli.js',
+0 silly argv   script: 'build'
+0 silly argv }
+1 notice cli v4.0.0
+2 verbose rootPath D:\my_project\monkey
+3 info versioning independent
+4 notice filter including "package*"
+5 info filter [ 'package*' ]
+6 error TypeError: Cannot read property 'split' of undefined
+6 error     at Minimatch.match (C:\Users\81260\AppData\Roaming\npm\node_modules\lerna\node_modules\minimatch\minimatch.js:713:11)
+6 error     at C:\Users\81260\AppData\Roaming\npm\node_modules\lerna\node_modules\minimatch\minimatch.js:691:15
+6 error     at Array.filter (<anonymous>)
+6 error     at Function.minimatch.match (C:\Users\81260\AppData\Roaming\npm\node_modules\lerna\node_modules\minimatch\minimatch.js:690:15)
+6 error     at module.exports (C:\Users\81260\AppData\Roaming\npm\node_modules\lerna\node_modules\multimatch\index.js:25:39)
+6 error     at filterPackages (C:\Users\81260\AppData\Roaming\npm\node_modules\lerna\node_modules\@lerna\filter-packages\filter-packages.js:44:28)
