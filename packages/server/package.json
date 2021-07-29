@@ -30,7 +30,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "@zhangxin/whistle.monkey",
+  "name": "@zhangxin/whistle.monkeyMock",
   "author": "zxx",
   "module": "dist/server.esm.js",
   "size-limit": [
@@ -62,5 +62,6 @@
     "koa-better-serve": "^2.0.7",
     "koa-body": "^4.2.0",
     "yaml": "^1.10.2"
-  }
+  },
+  "gitHead": "29c8034908cb03d0f6ea8ce3fce046f3848cb23c"
 }
