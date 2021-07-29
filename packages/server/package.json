@@ -46,7 +46,7 @@
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.9.2",
     "husky": "^7.0.1",
-    "mock-monkey-core": "^0.0.1",
+    "@zhangxin/mock-monkey-core": "^0.0.1",
     "size-limit": "^5.0.2",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.0",
@@ -63,5 +63,5 @@
     "koa-body": "^4.2.0",
     "yaml": "^1.10.2"
   },
-  "gitHead": "9959226a6f0ee4789757a54afa49452c25b494a4"
+  "gitHead": "bb2752dc3abca21f5329c2ab23e39783e4831db4"
 }
