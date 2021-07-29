@@ -31,7 +31,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "mock-monkey-core",
+  "name": "@zhangxin/mock-monkey-core",
   "author": "zxx",
   "module": "dist/mock-monkey.esm.js",
   "devDependencies": {
