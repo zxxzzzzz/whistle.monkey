@@ -1,5 +1,5 @@
 import { getRule } from './file/index';
-import {generate} from 'mock-monkey-core';
+import {generate} from '@zhangxin/mock-monkey-core';
 
 export function isContain(father: any, child: any):boolean {
   if(!child) return true
