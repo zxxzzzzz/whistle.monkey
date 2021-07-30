@@ -1,6 +1,7 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
 import YAML from 'yaml';
+import path from 'path';
 import { addRule, deleteRule, deleteQuery } from './rule';
 export { getRuleByUrl, getRule } from './rule'
 
@@ -9,18 +10,24 @@ export async function watch(watchPath: string) {
   if(currentWatcher){
     await currentWatcher.close()
   }
-  currentWatcher = chokidar.watch(watchPath).on('all', (eventName, path) => {
+  if(!fs.existsSync(watchPath)) throw Error('path not exist')
+  currentWatcher = chokidar.watch(watchPath).on('all', (eventName, _path) => {
+    const parsedPath = path.parse(_path)
+    if(parsedPath.ext !== '.yaml') return
     if (eventName === 'add') {
-      addFile(path);
+      addFile(_path);
+      global.sendLog({action:'add',message:`添加了模板 ${_path}`, name:'123',type:'success'})
     }
     if (eventName === 'change') {
-      updateFile(path);
+      updateFile(_path);
+      global.sendLog({action:'update',message:`更新了模板 ${_path}`, name:'123',type:'success'})
     }
     if (eventName === 'unlinkDir') {
-      deleteQuery(path);
+      deleteQuery(_path);
     }
     if (eventName === 'unlink') {
-      deleteFile(path);
+      deleteFile(_path);
+      global.sendLog({action:'delete',message:`删除了模板 ${_path}`, name:'123',type:'success'})
     }
   });
 }
