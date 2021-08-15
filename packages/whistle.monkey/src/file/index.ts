@@ -25,7 +25,6 @@ export async function watch(watchPath: string) {
       global.sendLog({ message: `忽略了<span class="text-pink-500">${_path}</span>`, date: new Date().valueOf(), type: 'warning', tags: ['忽略'] })
       return
     }
-    console.log(ignoreRules);
     if(parsedPath.ext === '.js' && ['add', 'change'].includes(eventName)){
         const i18n = {
           add:'添加',
