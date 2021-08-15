@@ -1,3 +1,3 @@
-export {default as rulesServer} from "./rulesServer";
-export {default as server} from "./server";
-export {default as uiServer} from "./ui";
+export {default as rulesServer} from "./whistleServer/rulesServer";
+export {default as server} from "./whistleServer/server";
+export {default as uiServer} from "./whistleServer/ui";

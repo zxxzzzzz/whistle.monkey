@@ -1,15 +1,26 @@
-import { getRule } from './file/index';
-import {generate} from '@zhangxin/mock-monkey-core';
+import { getRule } from '../file/index';
+import {generate, getValueByStatement} from '@zhangxin/mock-monkey-core';
 
-export function isContain(father: any, child: any):boolean {
+function isMatch(statement:string, val:any,scope:any){
+  const result = getValueByStatement(statement, scope)
+  if(typeof result === 'function'){
+    return result(val)
+  }
+  return val === result
+}
+
+export function isContain(father: any, child: any, scope:any):boolean {
   if(!child) return true
   if (father === child) return true;
+  if(typeof child === 'string'){
+    return isMatch(child, father, scope)
+  }
   if (typeof father !== 'object' || typeof child !== 'object') return false;
   if(Array.isArray(father) && Array.isArray(child)) {
     child.every((i) => {
       if(typeof i !== 'object') return father.includes(i)
       return father.some((fj) => {
-        isContain(fj, i)
+        isContain(fj, i, scope)
       })
     })
   }
@@ -17,7 +28,7 @@ export function isContain(father: any, child: any):boolean {
     const childItem = child[childKey]
     const fatherItem = father[childKey]
     if(!fatherItem) return false
-    return isContain(fatherItem, childItem)
+    return isContain(fatherItem, childItem, scope)
   })
 }
 
@@ -41,8 +52,7 @@ export default (server: any) => {
             queryData[key] = val;
           });
           const requestData = { ...JSON.parse(data), ...queryData };
-          // console.log(requestData.filterList, file.match.data.filterList);
-          const isFileMatch = isContain(requestData, rule?.request?.body);
+          const isFileMatch = isContain(requestData, rule?.request?.body, requestData);
           if (!isFileMatch) {
             req.passThrough();
             return;
@@ -58,6 +68,12 @@ export default (server: any) => {
           //   return;
           // }
           res.end(JSON.stringify(body), 'utf-8');
+          global.sendLog({
+            type:'success',
+            message:`请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
+            date: new Date().valueOf(),
+            tags:['命中']
+          })
         } catch (error) {
           res.setHeader('Content-Type', 'text/plain');
           res.end(error.message, 'utf-8');

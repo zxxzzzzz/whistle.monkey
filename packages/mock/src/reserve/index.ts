@@ -21,6 +21,9 @@ addFunction('random', _.random)
 addFunction('fake', (strings:string[])=>{
   return faker.fake(strings[0])
 })
+addFunction('bt10', ()=>{
+  return ()=>true
+})
 
 addFunction('between',(...params:any[]) => {
   const [p1,p2] = params
@@ -36,4 +39,7 @@ addFunction('between',(...params:any[]) => {
   }
   return ()=>false
 })
-export default {R, _, dayjs, ...additionalFunction, fk:faker}
+
+export function getReserveFunc(){
+  return {R, _, dayjs, faker, ...additionalFunction, }
+}

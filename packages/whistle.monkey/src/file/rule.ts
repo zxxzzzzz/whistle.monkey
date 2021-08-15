@@ -2,9 +2,15 @@ import { Rule } from './interface';
 const store = new Map<string, Rule>()
 
 export function addRule(key:string, rule: Rule) {
+  if(!rule){
+    throw Error('rule不能为空')
+  }
   store.set(key, rule)
 }
 export function updateRule(key:string, rule: Rule) {
+  if(!rule){
+    throw Error('rule不能为空')
+  }
   store.set(key, rule)
 }
 export function deleteRule(key:string) {

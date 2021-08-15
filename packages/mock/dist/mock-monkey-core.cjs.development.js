@@ -49,6 +49,9 @@ addFunction('random', _.random);
 addFunction('fake', strings => {
   return faker.fake(strings[0]);
 });
+addFunction('bt10', () => {
+  return () => true;
+});
 addFunction('between', (...params) => {
   const [p1, p2] = params;
 
@@ -66,13 +69,15 @@ addFunction('between', (...params) => {
 
   return () => false;
 });
-var reserveFunctions = {
-  R,
-  _,
-  dayjs,
-  ...additionalFunction,
-  fk: faker
-};
+function getReserveFunc() {
+  return {
+    R,
+    _,
+    dayjs,
+    faker,
+    ...additionalFunction
+  };
+}
 
 const scope = /*#__PURE__*/new Map();
 function addValue(key, value) {
@@ -107,10 +112,10 @@ function getValueByStatement({
   }
 }
 
-function getValue(statement) {
+function getValue(statement, scope) {
   return getValueByStatement({
-    scope: getScope(),
-    reserveFunctions,
+    scope: scope || getScope(),
+    reserveFunctions: getReserveFunc(),
     statement
   });
 }
@@ -125,17 +130,24 @@ function getKeyOption(key = '') {
     const statement = key.slice(key.indexOf('<') + 1, -1);
     const value = getValue(statement);
 
-    if (typeof value === 'number') {
-      return {
-        length: value,
-        exist: true
-      };
-    }
-
     if (value === false) {
       return {
         length: 0,
         exist: value === false ? false : true
+      };
+    }
+
+    const tValue = parseInt(value, 10);
+
+    if (Number.isNaN(tValue)) {
+      return {
+        length: 0,
+        exist: true
+      };
+    } else {
+      return {
+        length: tValue,
+        exist: true
       };
     }
   }
@@ -167,7 +179,6 @@ function generateObject(result) {
   const keys = Object.keys(result);
   return keys.reduce((re, key) => {
     const value = result[key]; // tKey是去除参数的可读key   list<@number>  =>  list
-    // eslint-disable-next-line no-use-before-define
 
     const objectValue = generateByKey({
       key,

@@ -1,4 +1,4 @@
-export async function post(url:string, data:object) {
+export async function post(url: string, data: object) {
   const request = new Request(url, {
     headers: new Headers({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(data),
@@ -11,9 +11,12 @@ export async function post(url:string, data:object) {
     return undefined;
   }
 }
-export async function get(url:string, data:any) {
-  const paramsStr = new URLSearchParams(data);
-  const request = new Request(`${url}?${paramsStr.toString()}`, {
+export async function get(url: string, data?: any) {
+  if (data) {
+    const paramsStr = new URLSearchParams(data);
+    url = `${url}?${paramsStr.toString()}`
+  }
+  const request = new Request(url, {
     method: 'get',
   });
   try {
@@ -24,8 +27,11 @@ export async function get(url:string, data:any) {
   }
 }
 
-export async function setRoot(root:string) {
+export async function setRoot(root: string) {
   return post('/cgi-bin/root', {
-    path:root,
+    path: root,
   });
+}
+export async function getRoot() {
+  return get('/cgi-bin/root');
 }

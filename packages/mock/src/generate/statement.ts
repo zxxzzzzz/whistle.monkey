@@ -1,6 +1,6 @@
 import { Obj } from '@/generate/interface';
 import R from 'ramda';
-import reserveFunctions from '../reserve';
+import {getReserveFunc} from '../reserve';
 import {getScope} from '../scope';
 
 function getValueByStatement({scope,reserveFunctions,statement}:{scope:Obj<any>,reserveFunctions:Obj<any>,statement:string}){
@@ -13,6 +13,6 @@ function getValueByStatement({scope,reserveFunctions,statement}:{scope:Obj<any>,
   }
 }
 
-export function getValue(statement:string){
-  return getValueByStatement({scope:getScope(),reserveFunctions,statement})
+export function getValue(statement:string, scope?:Obj<any>){
+  return getValueByStatement({scope:scope || getScope(),reserveFunctions:getReserveFunc(),statement})
 }
