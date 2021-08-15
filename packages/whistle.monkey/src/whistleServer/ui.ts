@@ -23,9 +23,9 @@ router.post('/cgi-bin/root', async (ctx) => {
     return;
   }
   try {
-    const config = JSON.parse(fs.readFileSync('./config.json', {encoding:'utf-8'}))
+    const config = JSON.parse(fs.readFileSync('./config.json', { encoding: 'utf-8' }))
     config.root = body.path
-    fs.writeFileSync('./config.json', JSON.stringify(config), {encoding:'utf-8'})
+    fs.writeFileSync('./config.json', JSON.stringify(config), { encoding: 'utf-8' })
     await watch(body.path);
     ctx.response.status = 200;
     ctx.response.body = JSON.stringify({ path: body.path })
@@ -35,7 +35,7 @@ router.post('/cgi-bin/root', async (ctx) => {
   }
 });
 router.get('/cgi-bin/root', async (ctx) => {
-  const {root} = JSON.parse(fs.readFileSync('./config.json', {encoding:'utf-8'}))
+  const { root } = JSON.parse(fs.readFileSync('./config.json', { encoding: 'utf-8' }))
   ctx.response.status = 200;
   ctx.response.body = JSON.stringify({ path: root })
 });
@@ -67,6 +67,7 @@ app
     await send(ctx, './index.html', { root });
   })
 
+let hasInit = false
 export default (server: any) => {
   if (!fs.existsSync('./config.json')) {
     fs.writeFileSync('./config.json', JSON.stringify({ root: '' }), { encoding: 'utf-8' })
@@ -77,9 +78,13 @@ export default (server: any) => {
     global.sendLog = (log: Log) => {
       _ws.send(JSON.stringify(log))
     }
-    const {root} = JSON.parse(fs.readFileSync('./config.json', {encoding:'utf-8'}))
-    if(root){
-      watch(root)
+    if (!hasInit) {
+      const { root } = JSON.parse(fs.readFileSync('./config.json', { encoding: 'utf-8' }))
+      if (root) {
+        watch(root)
+        hasInit = true
+      }
     }
   });
+
 };

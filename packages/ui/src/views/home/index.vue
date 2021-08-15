@@ -32,6 +32,8 @@ interface Log {
   if(tag === '添加') return {color:'cyan', icon:PlusOutlined, tag }
   if(tag === '更新') return {color:'blue', icon:RedoOutlined, tag }
   if(tag === '函数') return {color:'#2db7f5', icon:PlayCircleOutlined, tag }
+  if(tag === '启用') return {color:'cyan', icon:PlusOutlined, tag }
+  if(tag === '禁用') return {color:'#e6aafb', icon:PlusOutlined, tag }
   return {color:'', tag}
 }
 export default defineComponent({

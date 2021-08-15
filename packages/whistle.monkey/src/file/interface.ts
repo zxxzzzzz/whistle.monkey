@@ -1,10 +1,11 @@
 export interface Rule {
-  request:{
-    url:string,
-    body:any
+  request: {
+    url: string,
+    body: any
   },
-  response:{
-    body:any,
+  response: {
+    body: any,
   }
-  filePath:string
+  filePath: string,
+  disabled: boolean
 }
