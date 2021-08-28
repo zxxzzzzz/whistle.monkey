@@ -7,6 +7,9 @@ export function addRule(key: string, rule: Rule) {
   if (!rule) {
     throw Error('rule不能为空')
   }
+  if (!rule?.request?.url) {
+    throw Error('request的url不能为空')
+  }
   store.set(key, rule)
 }
 export function updateRule(key: string, rule: Rule) {

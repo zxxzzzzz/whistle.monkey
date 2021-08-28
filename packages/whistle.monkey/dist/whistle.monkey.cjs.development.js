@@ -7,7 +7,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var Koa = _interopDefault(require('koa'));
 var chokidar = _interopDefault(require('chokidar'));
 var fs = _interopDefault(require('fs'));
-var YAML = _interopDefault(require('yaml'));
+var YAML = _interopDefault(require('js-yaml'));
 var path = _interopDefault(require('path'));
 var micromatch = _interopDefault(require('micromatch'));
 var mockMonkeyCore = require('@zhangxin/mock-monkey-core');
@@ -20,8 +20,14 @@ var ws = require('ws');
 
 const store = /*#__PURE__*/new Map();
 function addRule(key, rule) {
+  var _rule$request;
+
   if (!rule) {
     throw Error('rule不能为空');
+  }
+
+  if (!(rule != null && (_rule$request = rule.request) != null && _rule$request.url)) {
+    throw Error('request的url不能为空');
   }
 
   store.set(key, rule);
@@ -70,14 +76,62 @@ async function watch(watchPath) {
 }
 
 function getObjFromYAML(filePath) {
+  let parsedJSON = {
+    request: {
+      url: '',
+      body: {}
+    },
+    response: {
+      body: {}
+    }
+  };
+
   try {
     const content = fs.readFileSync(filePath, {
       encoding: 'utf-8'
     });
-    return YAML.parse(content);
+    const parsedYaml = YAML.load(content);
+    if (!parsedYaml) throw Error('文件内容不能为空'); // 把合法的json转换为合法yaml
+
+    if (!parsedYaml.request) {
+      parsedJSON = formatJsonToYAML(content);
+      fs.writeFileSync(filePath, YAML.dump({ ...parsedJSON
+      }), {
+        encoding: 'utf-8'
+      });
+      return parsedJSON;
+    }
+
+    return parsedYaml;
   } catch (error) {
+    console.log(error);
+    fs.writeFileSync(filePath, YAML.dump(parsedJSON), {
+      encoding: 'utf-8'
+    });
     return {};
   }
+} // 把json转换为yaml。不catch错误。
+
+
+function formatJsonToYAML(content) {
+  const contentWithoutDocs = content.replace(/\/\/[\s\S]*/g, '');
+  console.log(contentWithoutDocs, 'contentWithoutDocs');
+  const parsed = JSON.parse(contentWithoutDocs); // 有符合定义的结构体，就不覆盖用户之前输入了
+
+  if (parsed != null && parsed.request) {
+    return {};
+  } // 没有符合定义的结构体，说明试复制来的后端json对象
+
+
+  return {
+    request: {
+      url: '',
+      body: {}
+    },
+    response: {
+      body: parsed
+    }
+  };
 }
 
 function addFile(filePath) {

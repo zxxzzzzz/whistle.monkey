@@ -1,12 +1,13 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
-import YAML from 'yaml';
+import YAML from 'js-yaml';
 import path from 'path';
 import { addRule, deleteRule, getRule, query, disableRule, enableRule } from './rule';
 export { getRuleByUrl, getRule } from './rule'
 import { addFunction } from '@zhangxin/mock-monkey-core';
 import findup from 'findup-sync';
 import micromatch from 'micromatch';
+import { Rule } from './interface';
 
 let currentWatcher: chokidar.FSWatcher
 export async function watch(watchPath: string) {
@@ -23,19 +24,45 @@ export async function watch(watchPath: string) {
 }
 
 function getObjFromYAML(filePath: string) {
+  let parsedJSON = {request:{url:'',body:{}},response:{body:{}}} as Partial<Rule>
   try {
     const content = fs.readFileSync(filePath, { encoding: 'utf-8' });
-    return YAML.parse(content);
+    const parsedYaml = YAML.load(content) as Partial<Rule>
+    if (!parsedYaml) throw Error('文件内容不能为空')
+    // 把合法的json转换为合法yaml
+    if(!parsedYaml.request){
+      parsedJSON = formatJsonToYAML(content)
+      fs.writeFileSync(filePath, YAML.dump({...parsedJSON }), { encoding: 'utf-8' })
+      return parsedJSON
+    }
+    return parsedYaml
   } catch (error) {
+    fs.writeFileSync(filePath, YAML.dump(parsedJSON), { encoding: 'utf-8' })
     return {};
+  }
+}
+// 把json转换为yaml。不catch错误。
+function formatJsonToYAML(content: string) {
+  const contentWithoutDocs = content.replace(/\/\/[\s\S]*/g, '')
+  const parsed = JSON.parse(contentWithoutDocs)
+  // 有符合定义的结构体，就不覆盖用户之前输入了
+  if (parsed?.request) {
+    return {}
+  }
+  // 没有符合定义的结构体，说明试复制来的后端json对象
+  return {
+    request: { url: '',body:{} },
+    response: {
+      body: parsed
+    }
   }
 }
 
 function addFile(filePath: string) {
-  addRule(filePath, { ...getObjFromYAML(filePath), filePath, disabled: false });
+  addRule(filePath, { ...getObjFromYAML(filePath), filePath, disabled: false } as Rule);
 }
 function updateFile(filePath: string) {
-  addRule(filePath, getObjFromYAML(filePath));
+  addRule(filePath, getObjFromYAML(filePath) as Rule);
 }
 function deleteFile(filePath: string) {
   deleteRule(filePath);
