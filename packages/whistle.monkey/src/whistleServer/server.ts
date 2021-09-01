@@ -1,7 +1,8 @@
 import { getRule } from '../file/index';
-import { generate, getValueByStatement } from '@zhangxin/mock-monkey-core';
+import { generate } from '@zhangxin/mock-monkey-core';
 import { Rule } from '../file/interface';
 import http from 'http';
+import { isValid } from '../utils/match';
 
 interface Request {
   originalReq: {
@@ -11,37 +12,6 @@ interface Request {
 }
 
 const NEXT = 'next';
-
-function isMatch(statement: string, val: any, scope: any) {
-  const result = getValueByStatement(statement, scope);
-  if (typeof result === 'function') {
-    return result(val);
-  }
-  return val === result;
-}
-
-export function isContain(father: any, child: any, scope: any): boolean {
-  if (!child) return true;
-  if (father === child) return true;
-  if (typeof child === 'string') {
-    return isMatch(child, father, scope);
-  }
-  if (typeof father !== 'object' || typeof child !== 'object') return false;
-  if (Array.isArray(father) && Array.isArray(child)) {
-    child.every(i => {
-      if (typeof i !== 'object') return father.includes(i);
-      return father.some(fj => {
-        isContain(fj, i, scope);
-      });
-    });
-  }
-  return Object.keys(child).every(childKey => {
-    const childItem = child[childKey];
-    const fatherItem = father[childKey];
-    if (!fatherItem) return false;
-    return isContain(fatherItem, childItem, scope);
-  });
-}
 
 export default (server: http.Server) => {
   server.on(
@@ -66,7 +36,7 @@ export default (server: http.Server) => {
             });
             const requestData = { ...JSON.parse(data), ...queryData };
             queue(
-              [handleRequestDataMatch, handleDelay, handleDelay, handleDefault],
+              [handleCors, handleRequestDataMatch, handleDelay, handleDefault],
               [req, res, rule, requestData]
             );
             global.sendLog({
@@ -86,6 +56,7 @@ export default (server: http.Server) => {
   );
 };
 
+// 延迟功能
 function handleDelay(
   request: http.IncomingMessage & Request,
   response: http.OutgoingMessage,
@@ -111,6 +82,7 @@ function handleDelay(
   return NEXT;
 }
 
+// 跨域设置
 function handleCors(
   request: http.IncomingMessage & Request,
   response: http.OutgoingMessage,
@@ -126,19 +98,24 @@ function handleCors(
   return NEXT;
 }
 
+// 对入参的验证。
 function handleRequestDataMatch(
-  request: http.IncomingMessage & Request,
-  _response: http.OutgoingMessage,
+  _request: http.IncomingMessage & Request,
+  response: http.ServerResponse,
   rule: Rule,
   requestData: any
 ) {
-  const isFileMatch = isContain(requestData, rule?.request?.body, requestData);
-  if (isFileMatch) {
-    request.passThrough();
-    return NEXT;
+  try {
+    isValid(requestData, rule?.request?.body, requestData);
+  } catch (error) {
+    response.statusCode = 400
+    response.statusMessage = error.message
+    response.end()
   }
-}
 
+  return
+}
+// 兜底方案
 function handleDefault(
   _request: http.IncomingMessage & Request,
   response: http.OutgoingMessage,
