@@ -19,7 +19,7 @@ import { setRoot,getRoot } from '@/api/request';
 import { defineComponent,ref,reactive } from 'vue'
 import {socket} from '@/api/log';
 import { message } from 'ant-design-vue';
-import {PlusOutlined, CheckCircleOutlined, RedoOutlined, PlayCircleOutlined} from '@ant-design/icons-vue';
+import {PlusOutlined, CheckCircleOutlined, RedoOutlined, PlayCircleOutlined, StopOutlined} from '@ant-design/icons-vue';
 interface Log {
   type:'error'|'warning'|'info'|'success',
   message:string,
@@ -33,7 +33,7 @@ interface Log {
   if(tag === '更新') return {color:'blue', icon:RedoOutlined, tag }
   if(tag === '函数') return {color:'#2db7f5', icon:PlayCircleOutlined, tag }
   if(tag === '启用') return {color:'cyan', icon:PlusOutlined, tag }
-  if(tag === '禁用') return {color:'#e6aafb', icon:PlusOutlined, tag }
+  if(tag === '禁用') return {color:'#e6aafb', icon:StopOutlined, tag }
   return {color:'', tag}
 }
 export default defineComponent({
