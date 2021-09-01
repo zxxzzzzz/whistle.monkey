@@ -35,9 +35,9 @@ function isDateString(str = '') {
 }
 
 dayjs.extend(isBetween);
-const additionalFunction = {};
+const additionalFunction = /*#__PURE__*/new Map();
 function addFunction(key, value) {
-  additionalFunction[key] = value;
+  additionalFunction.set(key, value);
 }
 addFunction('random', _.random);
 addFunction('fake', strings => {
@@ -69,7 +69,7 @@ function getReserveFunc() {
     _,
     dayjs,
     faker,
-    ...additionalFunction
+    ...additionalFunction.values()
   };
 }
 

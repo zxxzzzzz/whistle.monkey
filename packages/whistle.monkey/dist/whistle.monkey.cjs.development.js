@@ -104,7 +104,6 @@ function getObjFromYAML(filePath) {
 
     return parsedYaml;
   } catch (error) {
-    console.log(error);
     fs.writeFileSync(filePath, YAML.dump(parsedJSON), {
       encoding: 'utf-8'
     });
@@ -115,7 +114,6 @@ function getObjFromYAML(filePath) {
 
 function formatJsonToYAML(content) {
   const contentWithoutDocs = content.replace(/\/\/[\s\S]*/g, '');
-  console.log(contentWithoutDocs, 'contentWithoutDocs');
   const parsed = JSON.parse(contentWithoutDocs); // 有符合定义的结构体，就不覆盖用户之前输入了
 
   if (parsed != null && parsed.request) {
