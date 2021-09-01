@@ -1,3 +1,3 @@
-export declare function isContain(father: any, child: any, scope: any): boolean;
-declare const _default: (server: any) => void;
+import http from 'http';
+declare const _default: (server: http.Server) => void;
 export default _default;

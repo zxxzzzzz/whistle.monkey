@@ -1,4 +1,3 @@
-import { Obj } from 'generate/interface';
 import R from 'ramda';
 import _ from 'lodash';
 import {isDateString} from '../utils/is';
@@ -7,9 +6,9 @@ import faker from 'faker';
 import isBetween from 'dayjs/plugin/isBetween';
 dayjs.extend(isBetween);
 
-const additionalFunction = {} as Obj<Function>
+const additionalFunction = new Map<string, Function>()
 export function addFunction(key:string,value:Function){
-  additionalFunction[key] = value
+  additionalFunction.set(key, value)
 }
 
 export function deleteFunction(){
@@ -41,5 +40,5 @@ addFunction('between',(...params:any[]) => {
 })
 
 export function getReserveFunc(){
-  return {R, _, dayjs, faker, ...additionalFunction, }
+  return {R, _, dayjs, faker, ...additionalFunction.values(), }
 }

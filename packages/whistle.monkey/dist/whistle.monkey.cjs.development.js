@@ -282,42 +282,39 @@ var rulesServer = (server => {
   server.on('request', app.callback());
 });
 
-function isMatch(statement, val, scope) {
+function isEqual(statement, val, scope) {
   const result = mockMonkeyCore.getValueByStatement(statement, scope);
 
   if (typeof result === 'function') {
-    return result(val);
+    result(val);
   }
 
   return val === result;
-}
+} // 根据多数接口调查，request body一般就一层结构，所以做个简单的，只遍历第一层的
 
-function isContain(father, child, scope) {
-  if (!child) return true;
-  if (father === child) return true;
 
-  if (typeof child === 'string') {
-    return isMatch(child, father, scope);
+function isValid(father, child, scope) {
+  if (child == null) {
+    return true;
   }
 
-  if (typeof father !== 'object' || typeof child !== 'object') return false;
-
-  if (Array.isArray(father) && Array.isArray(child)) {
-    child.every(i => {
-      if (typeof i !== 'object') return father.includes(i);
-      return father.some(fj => {
-        isContain(fj, i, scope);
-      });
-    });
+  if (father == null) {
+    throw Error('入参不存在，但是却配置了入参验证, 所以请求失败');
   }
 
-  return Object.keys(child).every(childKey => {
-    const childItem = child[childKey];
-    const fatherItem = father[childKey];
-    if (!fatherItem) return false;
-    return isContain(fatherItem, childItem, scope);
+  Object.keys(child).forEach(key => {
+    const cv = child[key];
+    const fv = father[key];
+    const bo = isEqual(cv, fv, scope);
+
+    if (bo === false) {
+      throw Error(`入参字段 ${key} 不符合判定规则`);
+    }
   });
+  return true;
 }
+
+const NEXT = 'next';
 var server = (server => {
   server.on('request', (req, res) => {
     const filePath = decodeURIComponent(req.originalReq.ruleValue);
@@ -334,9 +331,7 @@ var server = (server => {
         }
 
         try {
-          var _rule$request, _rule$response;
-
-          const url = new URL(req.url, `http://${req.headers.host}`);
+          const url = new URL(req.url || '', `http://${req.headers.host}`);
           const queryData = {};
           url.searchParams.forEach((val, key) => {
             queryData[key] = val;
@@ -344,30 +339,7 @@ var server = (server => {
           const requestData = { ...JSON.parse(data),
             ...queryData
           };
-          const isFileMatch = isContain(requestData, rule == null ? void 0 : (_rule$request = rule.request) == null ? void 0 : _rule$request.body, requestData);
-
-          if (!isFileMatch) {
-            req.passThrough();
-            return;
-          }
-
-          res.setHeader('Access-Control-Allow-Credentials', 'true');
-          res.setHeader('Access-Control-Allow-Origin', req.headers['origin']);
-          res.setHeader('Content-Type', 'application/json');
-          const body = mockMonkeyCore.generate(rule == null ? void 0 : (_rule$response = rule.response) == null ? void 0 : _rule$response.body, requestData); // if (typeof template.delay === 'number') {
-          //   setTimeout(() => {
-          //     res.end(JSON.stringify(body), 'utf-8');
-          //   }, template.delay);
-          //   return;
-          // }
-
-          res.end(JSON.stringify(body), 'utf-8');
-          global.sendLog({
-            type: 'success',
-            message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
-            date: new Date().valueOf(),
-            tags: ['命中']
-          });
+          queue$1([handleCors, handleRequestDataMatch, handleDelay, handleDefault], [req, res, rule, requestData]);
         } catch (error) {
           res.setHeader('Content-Type', 'text/plain');
           res.end(error.message, 'utf-8');
@@ -376,7 +348,90 @@ var server = (server => {
       });
     }
   });
-});
+}); // 延迟功能
+
+function handleDelay(request, response, rule, requestData) {
+  if (typeof (rule == null ? void 0 : rule.delay) === 'number') {
+    var _rule$response;
+
+    const body = mockMonkeyCore.generate(rule == null ? void 0 : (_rule$response = rule.response) == null ? void 0 : _rule$response.body, requestData);
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    const filePath = decodeURIComponent(request.originalReq.ruleValue);
+    setTimeout(() => {
+      response.end(JSON.stringify(body), 'utf-8');
+      global.sendLog({
+        type: 'success',
+        message: `请求<span class="text-purple-500">${url.pathname}
+          </span>延迟${rule.delay}ms, 命中文件<span class="text-pink-500">${filePath}</span>`,
+        date: new Date().valueOf(),
+        tags: ['命中']
+      });
+    }, rule.delay);
+    return;
+  }
+
+  return NEXT;
+} // 跨域设置
+
+
+function handleCors(request, response) {
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Allow-Origin', request.headers['origin'] || '');
+  response.setHeader('Content-Type', 'application/json');
+  return NEXT;
+} // 对入参的验证。
+
+
+function handleRequestDataMatch(request, response, rule, requestData) {
+  try {
+    var _rule$request;
+
+    isValid(requestData, rule == null ? void 0 : (_rule$request = rule.request) == null ? void 0 : _rule$request.body, requestData);
+  } catch (error) {
+    response.statusCode = 400;
+    response.statusMessage = error.message;
+    response.end(JSON.stringify({
+      code: 400,
+      message: error.message
+    }), 'utf-8');
+    const filePath = decodeURIComponent(request.originalReq.ruleValue);
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    global.sendLog({
+      type: 'error',
+      message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
+      date: new Date().valueOf(),
+      tags: ['命中', '入参']
+    });
+    return;
+  }
+
+  return NEXT;
+} // 兜底方案
+
+
+function handleDefault(request, response, rule, requestData) {
+  var _rule$response2;
+
+  const filePath = decodeURIComponent(request.originalReq.ruleValue);
+  const body = mockMonkeyCore.generate(rule == null ? void 0 : (_rule$response2 = rule.response) == null ? void 0 : _rule$response2.body, requestData);
+  const url = new URL(request.url || '', `http://${request.headers.host}`);
+  response.end(JSON.stringify(body), 'utf-8');
+  global.sendLog({
+    type: 'success',
+    message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
+    date: new Date().valueOf(),
+    tags: ['命中']
+  });
+}
+
+function queue$1(items, params) {
+  let isBreak = false;
+  items.forEach(func => {
+    if (!isBreak) {
+      isBreak = func(...params) === NEXT ? false : true;
+    }
+  });
+}
 
 const app = /*#__PURE__*/new Koa();
 const router = /*#__PURE__*/new Router();
@@ -466,7 +521,7 @@ var ui = (server => {
   const wss = new ws.Server({
     port: 9999
   });
-  wss.on('connection', function (_ws) {
+  wss.on('connection', async function (_ws) {
     global.sendLog = log => {
       _ws.send(JSON.stringify(log));
     };
@@ -479,7 +534,17 @@ var ui = (server => {
       }));
 
       if (root) {
-        watch(root);
+        try {
+          await watch(root);
+        } catch (error) {
+          sendLog({
+            type: 'error',
+            message: error.message,
+            date: new Date().valueOf(),
+            tags: ['路径']
+          });
+        }
+
         hasInit = true;
       }
     }
