@@ -39,12 +39,6 @@ export default (server: http.Server) => {
               [handleCors, handleRequestDataMatch, handleDelay, handleDefault],
               [req, res, rule, requestData]
             );
-            global.sendLog({
-              type: 'success',
-              message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
-              date: new Date().valueOf(),
-              tags: ['命中'],
-            });
           } catch (error) {
             res.setHeader('Content-Type', 'text/plain');
             res.end(error.message, 'utf-8');
@@ -85,9 +79,7 @@ function handleDelay(
 // 跨域设置
 function handleCors(
   request: http.IncomingMessage & Request,
-  response: http.OutgoingMessage,
-  _rule: Rule,
-  _requestData: any
+  response: http.OutgoingMessage
 ) {
   response.setHeader('Access-Control-Allow-Credentials', 'true');
   response.setHeader(
@@ -100,7 +92,7 @@ function handleCors(
 
 // 对入参的验证。
 function handleRequestDataMatch(
-  _request: http.IncomingMessage & Request,
+  request: http.IncomingMessage & Request,
   response: http.ServerResponse,
   rule: Rule,
   requestData: any
@@ -108,22 +100,41 @@ function handleRequestDataMatch(
   try {
     isValid(requestData, rule?.request?.body, requestData);
   } catch (error) {
-    response.statusCode = 400
-    response.statusMessage = error.message
-    response.end()
+    response.statusCode = 400;
+    response.statusMessage = error.message;
+    response.end(
+      JSON.stringify({ code: 400, message: error.message }),
+      'utf-8'
+    );
+    const filePath = decodeURIComponent(request.originalReq.ruleValue);
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    global.sendLog({
+      type: 'error',
+      message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
+      date: new Date().valueOf(),
+      tags: ['命中','入参'],
+    });
+    return;
   }
-
-  return
+  return NEXT;
 }
 // 兜底方案
 function handleDefault(
-  _request: http.IncomingMessage & Request,
+  request: http.IncomingMessage & Request,
   response: http.OutgoingMessage,
   rule: Rule,
   requestData: any
 ) {
+  const filePath = decodeURIComponent(request.originalReq.ruleValue);
   const body = generate(rule?.response?.body, requestData);
+  const url = new URL(request.url || '', `http://${request.headers.host}`);
   response.end(JSON.stringify(body), 'utf-8');
+  global.sendLog({
+    type: 'success',
+    message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
+    date: new Date().valueOf(),
+    tags: ['命中'],
+  });
 }
 
 function queue(items: Function[], params: unknown[]) {

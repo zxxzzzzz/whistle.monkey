@@ -18,14 +18,14 @@ export function isValid(
     return true;
   }
   if (father == null) {
-    throw Error('请求参数不存在，但是却配置了请求参数验证, 所以请求失败');
+    throw Error('入参不存在，但是却配置了入参验证, 所以请求失败');
   }
   Object.keys(child as { [key: string]: any }).forEach(key => {
     const cv = (child as { [key: string]: any })[key];
     const fv = (father as { [key: string]: any })[key];
     const bo = isEqual(cv, fv, scope);
     if (bo === false) {
-      throw Error(`${key} 参数${cv}不匹配${fv}`);
+      throw Error(`入参字段 ${key} 不符合判定规则`);
     }
   });
   return true

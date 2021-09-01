@@ -8,4 +8,5 @@ export interface Rule {
     };
     filePath: string;
     disabled: boolean;
+    delay?: number;
 }
