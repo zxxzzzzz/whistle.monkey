@@ -23,7 +23,6 @@ addFunction('fake', (strings:string[])=>{
 addFunction('test', (val:string)=>{
   throw Error('测试 报错' + val)
 })
-
 addFunction('between',(...params:any[]) => {
   const [p1,p2] = params
   if(isDateString(p1) && isDateString(p2)){

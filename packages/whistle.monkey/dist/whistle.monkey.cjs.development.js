@@ -63,6 +63,7 @@ function query(queryList) {
   return micromatch([...store.keys()], queryList);
 }
 
+const NEXT = 'next';
 let currentWatcher;
 async function watch(watchPath) {
   if (currentWatcher) {
@@ -71,53 +72,25 @@ async function watch(watchPath) {
 
   if (!fs.existsSync(watchPath)) throw Error('path not exist');
   currentWatcher = chokidar.watch(watchPath).on('all', (eventName, _path) => {
-    queue([handleJSFile, handleYAMLFile, handleIgnore], [eventName, _path.replace(/[\\]/g, '/'), watchPath.replace(/[\\]/g, '/')]);
+    queue([handleInvalidYaml, handleJSFile, handleYAMLFile, handleIgnore], [eventName, _path.replace(/[\\]/g, '/'), watchPath.replace(/[\\]/g, '/')]);
   });
 }
 
 function getObjFromYAML(filePath) {
-  let parsedJSON = {
-    request: {
-      url: '',
-      body: {}
-    },
-    response: {
-      body: {}
-    }
-  };
-
-  try {
-    const content = fs.readFileSync(filePath, {
-      encoding: 'utf-8'
-    });
-    const parsedYaml = YAML.load(content);
-    if (!parsedYaml) throw Error('文件内容不能为空'); // 把合法的json转换为合法yaml
-
-    if (!parsedYaml.request) {
-      parsedJSON = formatJsonToYAML(content);
-      fs.writeFileSync(filePath, YAML.dump({ ...parsedJSON
-      }), {
-        encoding: 'utf-8'
-      });
-      return parsedJSON;
-    }
-
-    return parsedYaml;
-  } catch (error) {
-    fs.writeFileSync(filePath, YAML.dump(parsedJSON), {
-      encoding: 'utf-8'
-    });
-    return {};
-  }
+  const content = fs.readFileSync(filePath, {
+    encoding: 'utf-8'
+  });
+  return YAML.load(content);
 } // 把json转换为yaml。不catch错误。
 
 
-function formatJsonToYAML(content) {
-  const contentWithoutDocs = content.replace(/\/\/[\s\S]*/g, '');
+function getValidJson(content) {
+  const contentWithoutDocs = content.replace(/\/\/[^\n\r]*/g, '');
+  console.log(contentWithoutDocs);
   const parsed = JSON.parse(contentWithoutDocs); // 有符合定义的结构体，就不覆盖用户之前输入了
 
   if (parsed != null && parsed.request) {
-    return {};
+    return parsed;
   } // 没有符合定义的结构体，说明试复制来的后端json对象
 
 
@@ -130,6 +103,53 @@ function formatJsonToYAML(content) {
       body: parsed
     }
   };
+}
+
+async function queue(funcs, params) {
+  for (const func of funcs) {
+    const flag = await func(...params);
+
+    if (flag !== NEXT) {
+      break;
+    }
+  }
+}
+
+async function handleJSFile(eventName, _path) {
+  const parsedPath = path.parse(_path);
+  if (parsedPath.ext !== '.js' || !['add', 'change'].includes(eventName)) return NEXT;
+  const i18n = {
+    add: '添加',
+    change: '更新',
+    unlinkDir: '',
+    unlink: '',
+    addDir: ''
+  };
+
+  try {
+    if (eventName === 'change') delete require.cache[_path];
+
+    const mod = require(_path);
+
+    Object.keys(mod).forEach(key => {
+      mockMonkeyCore.addFunction(key, mod[key]);
+    });
+    global.sendLog({
+      message: `${i18n[eventName]}了函数<span class="text-pink-500">${_path}</span>`,
+      date: new Date().valueOf(),
+      type: 'success',
+      tags: ['添加', '函数']
+    });
+  } catch (error) {
+    global.sendLog({
+      message: `${i18n[eventName]}函数<span class="text-pink-500">${_path}</span>失败，${error.message}`,
+      date: new Date().valueOf(),
+      type: 'success',
+      tags: ['添加', '函数']
+    });
+  }
+
+  return;
 }
 
 function addFile(filePath) {
@@ -147,70 +167,9 @@ function deleteFile(filePath) {
   deleteRule(filePath);
 }
 
-async function queue(funcs, params) {
-  for (const func of funcs) {
-    await func(...params);
-  }
-}
-
-function getIgnoreRules(dir, root) {
-  const ignoreFilePath = findup('.ignore', {
-    cwd: dir
-  });
-  let ignoreRules = [];
-
-  if (ignoreFilePath) {
-    ignoreRules = fs.readFileSync(ignoreFilePath, {
-      encoding: 'utf-8'
-    }).split('\n').filter(text => !text.startsWith('// ')).map(text => {
-      const prefixPath = `${path.parse(ignoreFilePath.replace(/[\\]/g, '/')).dir}`.replace(root, '**');
-      return `${prefixPath}/${text.replace(/[\s]*/g, '')}`;
-    });
-  }
-
-  return ignoreRules;
-}
-
-async function handleJSFile(eventName, _path) {
-  const parsedPath = path.parse(_path);
-
-  if (parsedPath.ext === '.js' && ['add', 'change'].includes(eventName)) {
-    const i18n = {
-      add: '添加',
-      change: '更新',
-      unlinkDir: '',
-      unlink: '',
-      addDir: ''
-    };
-
-    try {
-      if (eventName === 'change') delete require.cache[_path];
-
-      const mod = require(_path);
-
-      Object.keys(mod).forEach(key => {
-        mockMonkeyCore.addFunction(key, mod[key]);
-      });
-      global.sendLog({
-        message: `${i18n[eventName]}了函数<span class="text-pink-500">${_path}</span>`,
-        date: new Date().valueOf(),
-        type: 'success',
-        tags: ['添加', '函数']
-      });
-    } catch (error) {
-      global.sendLog({
-        message: `${i18n[eventName]}函数<span class="text-pink-500">${_path}</span>失败，${error.message}`,
-        date: new Date().valueOf(),
-        type: 'success',
-        tags: ['添加', '函数']
-      });
-    }
-  }
-}
-
 async function handleYAMLFile(eventName, _path, root) {
   const parsedPath = path.parse(_path);
-  if (parsedPath.ext !== '.yaml') return;
+  if (parsedPath.ext !== '.yaml') return NEXT;
 
   if (eventName === 'add') {
     try {
@@ -282,6 +241,26 @@ async function handleYAMLFile(eventName, _path, root) {
       tags: ['删除']
     });
   }
+
+  return;
+}
+
+function getIgnoreRules(dir, root) {
+  const ignoreFilePath = findup('.ignore', {
+    cwd: dir
+  });
+  let ignoreRules = [];
+
+  if (ignoreFilePath) {
+    ignoreRules = fs.readFileSync(ignoreFilePath, {
+      encoding: 'utf-8'
+    }).split('\n').filter(text => !text.startsWith('// ')).map(text => {
+      const prefixPath = `${path.parse(ignoreFilePath.replace(/[\\]/g, '/')).dir}`.replace(root, '**');
+      return `${prefixPath}/${text.replace(/[\s]*/g, '')}`;
+    });
+  }
+
+  return ignoreRules;
 }
 
 async function handleIgnore(_eventName, _path, root) {
@@ -314,6 +293,48 @@ async function handleIgnore(_eventName, _path, root) {
       }
     });
   }
+} // 处理非法的yaml格式
+
+
+async function handleInvalidYaml(eventName, _path) {
+  const parsedPath = path.parse(_path);
+  if (!['add', 'change'].includes(eventName)) return NEXT;
+  if (parsedPath.ext !== '.yaml') return NEXT;
+  let parsedJSON = {
+    request: {
+      url: '',
+      body: {}
+    },
+    response: {
+      body: {}
+    }
+  };
+  const content = fs.readFileSync(_path, {
+    encoding: 'utf-8'
+  });
+
+  if (content === '') {
+    fs.writeFileSync(_path, YAML.dump({ ...parsedJSON
+    }), {
+      encoding: 'utf-8'
+    });
+    return;
+  }
+
+  try {
+    const obj = getValidJson(content);
+    fs.writeFileSync(_path, YAML.dump(obj), {
+      encoding: 'utf-8'
+    });
+    return;
+  } catch (error) {}
+
+  try {
+    YAML.load(content);
+    return NEXT;
+  } catch (error) {}
+
+  return;
 }
 
 var rulesServer = (server => {
@@ -366,7 +387,7 @@ function isValid(father, child, scope) {
   return true;
 }
 
-const NEXT = 'next';
+const NEXT$1 = 'next';
 var server = (server => {
   server.on('request', (req, res) => {
     const filePath = decodeURIComponent(req.originalReq.ruleValue);
@@ -422,7 +443,7 @@ function handleDelay(request, response, rule, requestData) {
     return;
   }
 
-  return NEXT;
+  return NEXT$1;
 } // 跨域设置
 
 
@@ -430,7 +451,7 @@ function handleCors(request, response) {
   response.setHeader('Access-Control-Allow-Credentials', 'true');
   response.setHeader('Access-Control-Allow-Origin', request.headers['origin'] || '');
   response.setHeader('Content-Type', 'application/json');
-  return NEXT;
+  return NEXT$1;
 } // 对入参的验证。
 
 
@@ -457,7 +478,7 @@ function handleRequestDataMatch(request, response, rule, requestData) {
     return;
   }
 
-  return NEXT;
+  return NEXT$1;
 } // 兜底方案
 
 
@@ -480,7 +501,7 @@ function queue$1(items, params) {
   let isBreak = false;
   items.forEach(func => {
     if (!isBreak) {
-      isBreak = func(...params) === NEXT ? false : true;
+      isBreak = func(...params) === NEXT$1 ? false : true;
     }
   });
 }
