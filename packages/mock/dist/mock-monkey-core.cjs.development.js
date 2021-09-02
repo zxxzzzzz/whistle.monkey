@@ -79,7 +79,11 @@ function getReserveFunc() {
     _,
     dayjs,
     faker,
+<<<<<<< HEAD
     ...addObj
+=======
+    ...additionalFunction.values()
+>>>>>>> d1364def56a5c386776ecc382d64cd288fdf7905
   };
 }
 
