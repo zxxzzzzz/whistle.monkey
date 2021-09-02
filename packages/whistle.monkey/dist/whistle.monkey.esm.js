@@ -259,7 +259,7 @@ async function handleYAMLFile(eventName, _path, root) {
     query([`${_path}/*`]).forEach(filePath => {
       deleteRule(filePath);
       global.sendLog({
-        message: `禁用了模板<span class="text-pink-500">${_path}</span>`,
+        message: `删除了模板<span class="text-pink-500">${_path}</span>`,
         date: new Date().valueOf(),
         type: 'warning',
         tags: ['禁用']
@@ -330,7 +330,6 @@ var rulesServer = (server => {
 
 function isEqual(statement, val, scope) {
   const result = getValueByStatement(statement, scope);
-  console.log(result, 're', statement);
 
   if (typeof result === 'function') {
     result(val);
