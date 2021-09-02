@@ -4,7 +4,7 @@ import fs from 'fs';
 import { Rule, SharedStore } from '../interface';
 
 // 把json转换为yaml。不catch错误。
-function getValidJson(content: string) {
+function getValidJson(content: string, defaultRule:Partial<Rule>) {
   const contentWithoutDocs = content.replace(/\/\/[^\n\r]*/g, '');
   const parsed = JSON.parse(contentWithoutDocs);
   // 有符合定义的结构体，就不覆盖用户之前输入了
@@ -13,7 +13,7 @@ function getValidJson(content: string) {
   }
   // 没有符合定义的结构体，说明试复制来的后端json对象
   return {
-    request: { url: '', body: {} },
+    ...defaultRule,
     response: {
       body: parsed,
     },
@@ -26,18 +26,18 @@ export async function handleInvalidYaml(store: SharedStore) {
   const parsedPath = path.parse(_path);
   if (!['add', 'change'].includes(eventName)) return 'next';
   if (parsedPath.ext !== '.yaml') return 'next';
-  let parsedJSON = { request: { url: 'defaultUrl', body: {} }, response: { body: {} } } as Partial<Rule>;
+  let parsedJSON = { request: { url: path.parse(_path).name, body: {} }, response: { body: {} } } as Partial<Rule>;
   const content = fs.readFileSync(_path, { encoding: 'utf-8' });
   // 文件内容为空，初始化一个模板
   if (content === '') {
     fs.writeFileSync(_path, YAML.dump({ ...parsedJSON }), {encoding: 'utf-8'});
-    return;
+    return
   }
   try {
     // 如果输入的是合法json,把他变成yaml格式
-    const obj = getValidJson(content);
+    const obj = getValidJson(content, parsedJSON);
     fs.writeFileSync(_path, YAML.dump(obj), { encoding: 'utf-8' });
-    return;
+    return 
   } catch (error) { 
    
   }

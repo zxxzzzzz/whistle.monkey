@@ -79,7 +79,7 @@ function query(queryList) {
   return micromatch([...store.keys()], queryList);
 }
 
-function getValidJson(content) {
+function getValidJson(content, defaultRule) {
   const contentWithoutDocs = content.replace(/\/\/[^\n\r]*/g, '');
   const parsed = JSON.parse(contentWithoutDocs); // 有符合定义的结构体，就不覆盖用户之前输入了
 
@@ -88,11 +88,7 @@ function getValidJson(content) {
   } // 没有符合定义的结构体，说明试复制来的后端json对象
 
 
-  return {
-    request: {
-      url: '',
-      body: {}
-    },
+  return { ...defaultRule,
     response: {
       body: parsed
     }
@@ -105,12 +101,13 @@ async function handleInvalidYaml(store) {
     _path,
     eventName
   } = store;
+  console.log('cchange', eventName);
   const parsedPath = path.parse(_path);
   if (!['add', 'change'].includes(eventName)) return 'next';
   if (parsedPath.ext !== '.yaml') return 'next';
   let parsedJSON = {
     request: {
-      url: 'defaultUrl',
+      url: path.parse(_path).name,
       body: {}
     },
     response: {
@@ -131,7 +128,7 @@ async function handleInvalidYaml(store) {
 
   try {
     // 如果输入的是合法json,把他变成yaml格式
-    const obj = getValidJson(content);
+    const obj = getValidJson(content, parsedJSON);
     fs.writeFileSync(_path, YAML.dump(obj), {
       encoding: 'utf-8'
     });
