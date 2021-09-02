@@ -83,6 +83,9 @@ export default (server: any) => {
   const wss = new Server({ port: 9999 });
   wss.on('connection', async function(_ws: any) {
     global.sendLog = (log: Log) => {
+      if(!log.date){
+        log.date = new Date().valueOf()
+      }
       _ws.send(JSON.stringify(log));
     };
     if (!hasInit) {
@@ -96,7 +99,6 @@ export default (server: any) => {
           sendLog({
             type: 'error',
             message: error.message,
-            date: new Date().valueOf(),
             tags: ['路径'],
           });
         }

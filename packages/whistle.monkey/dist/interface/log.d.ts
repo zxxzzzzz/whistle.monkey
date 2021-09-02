@@ -1,6 +1,6 @@
 export interface Log {
     type: 'error' | 'warning' | 'info' | 'success';
     message: string;
-    date: number;
+    date?: number;
     tags?: string[];
 }

@@ -7,9 +7,9 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var Koa = _interopDefault(require('koa'));
 var chokidar = _interopDefault(require('chokidar'));
 var fs = _interopDefault(require('fs'));
-var YAML = _interopDefault(require('js-yaml'));
-var path = _interopDefault(require('path'));
 var micromatch = _interopDefault(require('micromatch'));
+var path = _interopDefault(require('path'));
+var YAML = _interopDefault(require('js-yaml'));
 var mockMonkeyCore = require('@zhangxin/mock-monkey-core');
 var findup = _interopDefault(require('findup-sync'));
 var Router = _interopDefault(require('@koa/router'));
@@ -28,6 +28,22 @@ function addRule(key, rule) {
 
   if (!(rule != null && (_rule$request = rule.request) != null && _rule$request.url)) {
     throw Error('request的url不能为空');
+  }
+
+  store.set(key, rule);
+}
+function updateRule(key, rule) {
+  if (!rule) {
+    throw Error('rule不能为空');
+  }
+
+  const tempRule = store.get(key);
+
+  if (tempRule) {
+    store.set(key, { ...tempRule,
+      ...rule
+    });
+    return;
   }
 
   store.set(key, rule);
@@ -63,30 +79,8 @@ function query(queryList) {
   return micromatch([...store.keys()], queryList);
 }
 
-const NEXT = 'next';
-let currentWatcher;
-async function watch(watchPath) {
-  if (currentWatcher) {
-    await currentWatcher.close();
-  }
-
-  if (!fs.existsSync(watchPath)) throw Error('path not exist');
-  currentWatcher = chokidar.watch(watchPath).on('all', (eventName, _path) => {
-    queue([handleInvalidYaml, handleJSFile, handleYAMLFile, handleIgnore], [eventName, _path.replace(/[\\]/g, '/'), watchPath.replace(/[\\]/g, '/')]);
-  });
-}
-
-function getObjFromYAML(filePath) {
-  const content = fs.readFileSync(filePath, {
-    encoding: 'utf-8'
-  });
-  return YAML.load(content);
-} // 把json转换为yaml。不catch错误。
-
-
 function getValidJson(content) {
   const contentWithoutDocs = content.replace(/\/\/[^\n\r]*/g, '');
-  console.log(contentWithoutDocs);
   const parsed = JSON.parse(contentWithoutDocs); // 有符合定义的结构体，就不覆盖用户之前输入了
 
   if (parsed != null && parsed.request) {
@@ -103,21 +97,69 @@ function getValidJson(content) {
       body: parsed
     }
   };
-}
+} // 处理非法的yaml格式
 
-async function queue(funcs, params) {
-  for (const func of funcs) {
-    const flag = await func(...params);
 
-    if (flag !== NEXT) {
-      break;
-    }
-  }
-}
-
-async function handleJSFile(eventName, _path) {
+async function handleInvalidYaml(store) {
+  const {
+    _path,
+    eventName
+  } = store;
   const parsedPath = path.parse(_path);
-  if (parsedPath.ext !== '.js' || !['add', 'change'].includes(eventName)) return NEXT;
+  if (!['add', 'change'].includes(eventName)) return 'next';
+  if (parsedPath.ext !== '.yaml') return 'next';
+  let parsedJSON = {
+    request: {
+      url: 'defaultUrl',
+      body: {}
+    },
+    response: {
+      body: {}
+    }
+  };
+  const content = fs.readFileSync(_path, {
+    encoding: 'utf-8'
+  }); // 文件内容为空，初始化一个模板
+
+  if (content === '') {
+    fs.writeFileSync(_path, YAML.dump({ ...parsedJSON
+    }), {
+      encoding: 'utf-8'
+    });
+    return;
+  }
+
+  try {
+    // 如果输入的是合法json,把他变成yaml格式
+    const obj = getValidJson(content);
+    fs.writeFileSync(_path, YAML.dump(obj), {
+      encoding: 'utf-8'
+    });
+    return;
+  } catch (error) {}
+
+  try {
+    store.rule = YAML.load(content);
+    return 'next';
+  } catch (error) {
+    // 如果yaml格式化失败，发送问题到log
+    global.sendLog({
+      message: `${_path}文件有格式问题<span class="text-pink-500">${error.message}</span>`,
+      type: 'error',
+      tags: ['yaml', '格式']
+    });
+  }
+
+  return;
+}
+
+async function handleJSFile(store) {
+  const {
+    _path,
+    eventName
+  } = store;
+  const parsedPath = path.parse(_path);
+  if (parsedPath.ext !== '.js' || !['add', 'change'].includes(eventName)) return 'next';
   const i18n = {
     add: '添加',
     change: '更新',
@@ -136,109 +178,14 @@ async function handleJSFile(eventName, _path) {
     });
     global.sendLog({
       message: `${i18n[eventName]}了函数<span class="text-pink-500">${_path}</span>`,
-      date: new Date().valueOf(),
       type: 'success',
       tags: ['添加', '函数']
     });
   } catch (error) {
     global.sendLog({
       message: `${i18n[eventName]}函数<span class="text-pink-500">${_path}</span>失败，${error.message}`,
-      date: new Date().valueOf(),
       type: 'success',
       tags: ['添加', '函数']
-    });
-  }
-
-  return;
-}
-
-function addFile(filePath) {
-  addRule(filePath, { ...getObjFromYAML(filePath),
-    filePath,
-    disabled: false
-  });
-}
-
-function updateFile(filePath) {
-  addRule(filePath, getObjFromYAML(filePath));
-}
-
-function deleteFile(filePath) {
-  deleteRule(filePath);
-}
-
-async function handleYAMLFile(eventName, _path, root) {
-  const parsedPath = path.parse(_path);
-  if (parsedPath.ext !== '.yaml') return NEXT;
-
-  if (eventName === 'add') {
-    try {
-      addFile(_path);
-      const ignoreRules = getIgnoreRules(parsedPath.dir, root);
-
-      if (micromatch.isMatch(_path, ignoreRules)) {
-        disableRule(_path);
-        global.sendLog({
-          message: `禁用了模板<span class="text-pink-500">${_path}</span>`,
-          date: new Date().valueOf(),
-          type: 'warning',
-          tags: ['禁用']
-        });
-        return;
-      }
-
-      global.sendLog({
-        message: `添加了模板<span class="text-pink-500">${_path}</span>`,
-        date: new Date().valueOf(),
-        type: 'success',
-        tags: ['添加']
-      });
-    } catch (error) {
-      global.sendLog({
-        message: `添加模板<span class="text-pink-500">${_path}</span>失败,${error.message}`,
-        date: new Date().valueOf(),
-        type: 'error'
-      });
-    }
-  }
-
-  if (eventName === 'change') {
-    try {
-      updateFile(_path);
-      global.sendLog({
-        date: new Date().valueOf(),
-        message: `更新了模板<span class="text-pink-500">${_path}</span>`,
-        type: 'success',
-        tags: ['更新']
-      });
-    } catch (error) {
-      global.sendLog({
-        message: `更新模板<span class="text-pink-500">${_path}</span>失败`,
-        date: new Date().valueOf(),
-        type: 'error'
-      });
-    }
-  }
-
-  if (eventName === 'unlinkDir') {
-    query([`${_path}/*`]).forEach(filePath => {
-      deleteRule(filePath);
-      global.sendLog({
-        message: `删除了模板<span class="text-pink-500">${_path}</span>`,
-        date: new Date().valueOf(),
-        type: 'warning',
-        tags: ['禁用']
-      });
-    });
-  }
-
-  if (eventName === 'unlink') {
-    deleteFile(_path);
-    global.sendLog({
-      date: new Date().valueOf(),
-      message: `删除了模板<span class="text-pink-500">${_path}</span>`,
-      type: 'success',
-      tags: ['删除']
     });
   }
 
@@ -263,7 +210,90 @@ function getIgnoreRules(dir, root) {
   return ignoreRules;
 }
 
-async function handleIgnore(_eventName, _path, root) {
+async function handleYAMLFile(store) {
+  const {
+    _path,
+    eventName,
+    root
+  } = store;
+  const parsedPath = path.parse(_path);
+  if (parsedPath.ext !== '.yaml') return 'next';
+
+  if (eventName === 'add') {
+    try {
+      addRule(_path, { ...store.rule,
+        filePath: _path,
+        disabled: false
+      });
+      const ignoreRules = getIgnoreRules(parsedPath.dir, root);
+
+      if (micromatch.isMatch(_path, ignoreRules)) {
+        disableRule(_path);
+        global.sendLog({
+          message: `禁用了模板<span class="text-pink-500">${_path}</span>`,
+          type: 'warning',
+          tags: ['禁用']
+        });
+        return;
+      }
+
+      global.sendLog({
+        message: `添加了模板<span class="text-pink-500">${_path}</span>`,
+        type: 'success',
+        tags: ['添加']
+      });
+    } catch (error) {
+      global.sendLog({
+        message: `添加模板<span class="text-pink-500">${_path}</span>失败,${error.message}`,
+        type: 'error'
+      });
+    }
+  }
+
+  if (eventName === 'change') {
+    try {
+      updateRule(_path, store.rule);
+      global.sendLog({
+        message: `更新了模板<span class="text-pink-500">${_path}</span>`,
+        type: 'success',
+        tags: ['更新']
+      });
+    } catch (error) {
+      global.sendLog({
+        message: `更新模板<span class="text-pink-500">${_path}</span>失败`,
+        type: 'error'
+      });
+    }
+  }
+
+  if (eventName === 'unlinkDir') {
+    query([`${_path}/*`]).forEach(filePath => {
+      deleteRule(filePath);
+      global.sendLog({
+        message: `删除了模板<span class="text-pink-500">${_path}</span>`,
+        type: 'warning',
+        tags: ['禁用']
+      });
+    });
+  }
+
+  if (eventName === 'unlink') {
+    deleteRule(_path);
+    global.sendLog({
+      message: `删除了模板<span class="text-pink-500">${_path}</span>`,
+      type: 'success',
+      tags: ['删除']
+    });
+  }
+
+  return;
+}
+
+async function handleIgnore(store) {
+  const {
+    _path,
+    root
+  } = store;
   const parsedPath = path.parse(_path);
 
   if (parsedPath.name === '.ignore') {
@@ -275,7 +305,6 @@ async function handleIgnore(_eventName, _path, root) {
         enableRule(filePath);
         global.sendLog({
           message: `启用了模板<span class="text-pink-500">${filePath}</span>`,
-          date: new Date().valueOf(),
           type: 'success',
           tags: ['启用']
         });
@@ -286,55 +315,42 @@ async function handleIgnore(_eventName, _path, root) {
         disableRule(filePath);
         global.sendLog({
           message: `禁用了模板<span class="text-pink-500">${filePath}</span>`,
-          date: new Date().valueOf(),
           type: 'warning',
           tags: ['禁用']
         });
       }
     });
   }
-} // 处理非法的yaml格式
+}
 
-
-async function handleInvalidYaml(eventName, _path) {
-  const parsedPath = path.parse(_path);
-  if (!['add', 'change'].includes(eventName)) return NEXT;
-  if (parsedPath.ext !== '.yaml') return NEXT;
-  let parsedJSON = {
-    request: {
-      url: '',
-      body: {}
-    },
-    response: {
-      body: {}
-    }
-  };
-  const content = fs.readFileSync(_path, {
-    encoding: 'utf-8'
-  });
-
-  if (content === '') {
-    fs.writeFileSync(_path, YAML.dump({ ...parsedJSON
-    }), {
-      encoding: 'utf-8'
-    });
-    return;
+let currentWatcher;
+async function watch(watchPath) {
+  if (currentWatcher) {
+    await currentWatcher.close();
   }
 
-  try {
-    const obj = getValidJson(content);
-    fs.writeFileSync(_path, YAML.dump(obj), {
-      encoding: 'utf-8'
+  if (!fs.existsSync(watchPath)) throw Error('path not exist');
+  currentWatcher = chokidar.watch(watchPath).on('all', (eventName, _path) => {
+    queue([handleInvalidYaml, handleJSFile, handleYAMLFile, handleIgnore], {
+      eventName,
+      _path: _path.replace(/[\\]/g, '/'),
+      root: watchPath.replace(/[\\]/g, '/'),
+      content: ''
     });
-    return;
-  } catch (error) {}
+  });
+}
 
-  try {
-    YAML.load(content);
-    return NEXT;
-  } catch (error) {}
+async function queue(funcs, params) {
+  if (!funcs.length) return;
+  const store = params;
 
-  return;
+  for (const func of funcs) {
+    const flag = await func(store);
+
+    if (flag !== 'next') {
+      break;
+    }
+  }
 }
 
 var rulesServer = (server => {
@@ -387,7 +403,7 @@ function isValid(father, child, scope) {
   return true;
 }
 
-const NEXT$1 = 'next';
+const NEXT = 'next';
 var server = (server => {
   server.on('request', (req, res) => {
     const filePath = decodeURIComponent(req.originalReq.ruleValue);
@@ -436,14 +452,13 @@ function handleDelay(request, response, rule, requestData) {
         type: 'success',
         message: `请求<span class="text-purple-500">${url.pathname}
           </span>延迟${rule.delay}ms, 命中文件<span class="text-pink-500">${filePath}</span>`,
-        date: new Date().valueOf(),
         tags: ['命中']
       });
     }, rule.delay);
     return;
   }
 
-  return NEXT$1;
+  return NEXT;
 } // 跨域设置
 
 
@@ -451,7 +466,7 @@ function handleCors(request, response) {
   response.setHeader('Access-Control-Allow-Credentials', 'true');
   response.setHeader('Access-Control-Allow-Origin', request.headers['origin'] || '');
   response.setHeader('Content-Type', 'application/json');
-  return NEXT$1;
+  return NEXT;
 } // 对入参的验证。
 
 
@@ -472,13 +487,12 @@ function handleRequestDataMatch(request, response, rule, requestData) {
     global.sendLog({
       type: 'error',
       message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
-      date: new Date().valueOf(),
       tags: ['命中', '入参']
     });
     return;
   }
 
-  return NEXT$1;
+  return NEXT;
 } // 兜底方案
 
 
@@ -492,7 +506,6 @@ function handleDefault(request, response, rule, requestData) {
   global.sendLog({
     type: 'success',
     message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
-    date: new Date().valueOf(),
     tags: ['命中']
   });
 }
@@ -501,7 +514,7 @@ function queue$1(items, params) {
   let isBreak = false;
   items.forEach(func => {
     if (!isBreak) {
-      isBreak = func(...params) === NEXT$1 ? false : true;
+      isBreak = func(...params) === NEXT ? false : true;
     }
   });
 }
@@ -596,6 +609,10 @@ var ui = (server => {
   });
   wss.on('connection', async function (_ws) {
     global.sendLog = log => {
+      if (!log.date) {
+        log.date = new Date().valueOf();
+      }
+
       _ws.send(JSON.stringify(log));
     };
 
@@ -613,7 +630,6 @@ var ui = (server => {
           sendLog({
             type: 'error',
             message: error.message,
-            date: new Date().valueOf(),
             tags: ['路径']
           });
         }

@@ -67,7 +67,6 @@ function handleDelay(
         type: 'success',
         message: `请求<span class="text-purple-500">${url.pathname}
           </span>延迟${rule.delay}ms, 命中文件<span class="text-pink-500">${filePath}</span>`,
-        date: new Date().valueOf(),
         tags: ['命中'],
       });
     }, rule.delay);
@@ -111,7 +110,6 @@ function handleRequestDataMatch(
     global.sendLog({
       type: 'error',
       message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
-      date: new Date().valueOf(),
       tags: ['命中','入参'],
     });
     return;
@@ -132,7 +130,6 @@ function handleDefault(
   global.sendLog({
     type: 'success',
     message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
-    date: new Date().valueOf(),
     tags: ['命中'],
   });
 }
