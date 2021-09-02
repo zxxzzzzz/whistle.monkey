@@ -35,16 +35,16 @@ function isDateString(str = '') {
 }
 
 dayjs.extend(isBetween);
-const additionalFunction = {};
+const additionalFunction = /*#__PURE__*/new Map();
 function addFunction(key, value) {
-  additionalFunction[key] = value;
+  additionalFunction.set(key, value);
 }
 addFunction('random', _.random);
 addFunction('fake', strings => {
   return faker.fake(strings[0]);
 });
-addFunction('bt10', () => {
-  return () => true;
+addFunction('test', val => {
+  throw Error('测试 报错' + val);
 });
 addFunction('between', (...params) => {
   const [p1, p2] = params;
@@ -64,12 +64,16 @@ addFunction('between', (...params) => {
   return () => false;
 });
 function getReserveFunc() {
+  const addObj = [...additionalFunction.entries()].reduce((re, entry) => {
+    re[entry[0]] = entry[1];
+    return re;
+  }, {});
   return {
     R,
     _,
     dayjs,
     faker,
-    ...additionalFunction
+    ...addObj
   };
 }
 
@@ -99,6 +103,7 @@ function getValueByStatement({
   };
 
   try {
+    console.log(...Object.keys(combine));
     const func = Function(...Object.keys(combine), `return ${statement}`);
     return func(...R.values(combine));
   } catch (error) {

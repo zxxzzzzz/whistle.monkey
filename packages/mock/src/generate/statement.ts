@@ -6,6 +6,7 @@ import {getScope} from '../scope';
 function getValueByStatement({scope,reserveFunctions,statement}:{scope:Obj<any>,reserveFunctions:Obj<any>,statement:string}){
   const combine = {...scope,...reserveFunctions}
   try {
+    console.log(...Object.keys(combine));
     const func = Function(...Object.keys(combine),`return ${statement}`)
     return func(...R.values(combine))
   } catch (error) {

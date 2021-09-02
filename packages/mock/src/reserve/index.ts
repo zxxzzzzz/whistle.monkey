@@ -20,8 +20,8 @@ addFunction('random', _.random)
 addFunction('fake', (strings:string[])=>{
   return faker.fake(strings[0])
 })
-addFunction('bt10', ()=>{
-  return ()=>true
+addFunction('test', (val:string)=>{
+  throw Error('测试 报错' + val)
 })
 
 addFunction('between',(...params:any[]) => {
@@ -40,5 +40,9 @@ addFunction('between',(...params:any[]) => {
 })
 
 export function getReserveFunc(){
-  return {R, _, dayjs, faker, ...additionalFunction.values(), }
+  const addObj = [...additionalFunction.entries()].reduce((re, entry) => {
+    re[entry[0]] = entry[1]
+    return re
+  }, {} as {[key:string]:any})
+  return {R, _, dayjs, faker, ...addObj}
 }

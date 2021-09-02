@@ -278,6 +278,7 @@ var rulesServer = (server => {
 
 function isEqual(statement, val, scope) {
   const result = getValueByStatement(statement, scope);
+  console.log(result, 're', statement);
 
   if (typeof result === 'function') {
     result(val);

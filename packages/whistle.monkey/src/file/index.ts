@@ -115,7 +115,7 @@ async function handleYAMLFile(eventName: 'add' | 'addDir' | 'change' | 'unlink' 
   if (eventName === 'unlinkDir') {
     query([`${_path}/*`]).forEach((filePath) => {
       deleteRule(filePath)
-      global.sendLog({ message: `禁用了模板<span class="text-pink-500">${_path}</span>`, date: new Date().valueOf(), type: 'warning', tags: ['禁用'] })
+      global.sendLog({ message: `删除了模板<span class="text-pink-500">${_path}</span>`, date: new Date().valueOf(), type: 'warning', tags: ['禁用'] })
     })
   }
   if (eventName === 'unlink') {
