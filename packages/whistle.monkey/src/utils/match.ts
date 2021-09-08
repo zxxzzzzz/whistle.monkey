@@ -1,5 +1,7 @@
 import { getValueByStatement } from '@zhangxin/mock-monkey-core';
 
+type cMap = { [key: string]: any }
+
 function isEqual(statement: string, val: any, scope: any) {
   const result = getValueByStatement(statement, scope);
   if (typeof result === 'function') {
@@ -20,9 +22,9 @@ export function isValid(
   if (father == null) {
     throw Error('入参不存在，但是却配置了入参验证, 所以请求失败');
   }
-  Object.keys(child as { [key: string]: any }).forEach(key => {
-    const cv = (child as { [key: string]: any })[key];
-    const fv = (father as { [key: string]: any })[key];
+  Object.keys(child as cMap).forEach(key => {
+    const cv = (child as cMap)[key];
+    const fv = (father as cMap)[key];
     const bo = isEqual(cv, fv, scope);
     if (bo === false) {
       throw Error(`入参字段 ${key} 不符合判定规则`);
