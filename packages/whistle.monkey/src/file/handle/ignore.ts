@@ -1,7 +1,7 @@
 import path from 'path';
 import { getRule, query, disableRule, enableRule } from '@/file/rule';
 import micromatch from 'micromatch';
-import { SharedStore } from '@/file/interface';
+import { SharedStore } from '@/interface/rule';
 import { getIgnoreRules } from '@/utils/ignore';
 
 

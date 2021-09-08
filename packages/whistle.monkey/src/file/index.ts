@@ -1,7 +1,7 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
 export { getRuleByUrl, getRule } from '@/file/rule';
-import { SharedStore } from '@/file/interface';
+import { SharedStore } from '@/interface/rule';
 import { handleInvalidYaml } from '@/file/handle/invalidYaml';
 import { handleJSFile } from '@/file/handle/jsFile';
 import { handleYAMLFile } from '@/file/handle/ruleYaml';

@@ -1,4 +1,4 @@
-import { Rule } from './interface';
+import { Rule } from '@/interface/rule';
 import micromatch from 'micromatch';
 
 const store = new Map<string, Rule>()

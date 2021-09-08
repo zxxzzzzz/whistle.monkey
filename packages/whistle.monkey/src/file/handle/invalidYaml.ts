@@ -1,7 +1,7 @@
 import path from 'path';
 import YAML from 'js-yaml';
 import fs from 'fs';
-import { Rule, SharedStore } from '../interface';
+import { Rule, SharedStore } from '@/interface/rule';
 
 // 把json转换为yaml。不catch错误。
 function getValidJson(content: string, defaultRule:Partial<Rule>) {

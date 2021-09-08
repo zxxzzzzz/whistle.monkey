@@ -95,7 +95,6 @@ async function handleInvalidYaml(store) {
     _path,
     eventName
   } = store;
-  console.log('cchange', eventName);
   const parsedPath = path.parse(_path);
   if (!['add', 'change'].includes(eventName)) return 'next';
   if (parsedPath.ext !== '.yaml') return 'next';
@@ -491,6 +490,7 @@ function handleDefault(request, response, rule, requestData) {
   var _rule$response2;
 
   const filePath = decodeURIComponent(request.originalReq.ruleValue);
+  console.log(filePath, 'file');
   const body = generate(rule == null ? void 0 : (_rule$response2 = rule.response) == null ? void 0 : _rule$response2.body, requestData);
   const url = new URL(request.url || '', `http://${request.headers.host}`);
   response.end(JSON.stringify(body), 'utf-8');

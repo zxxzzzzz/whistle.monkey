@@ -103,7 +103,6 @@ function getValueByStatement({
   };
 
   try {
-    console.log(...Object.keys(combine));
     const func = Function(...Object.keys(combine), `return ${statement}`);
     return func(...R.values(combine));
   } catch (error) {

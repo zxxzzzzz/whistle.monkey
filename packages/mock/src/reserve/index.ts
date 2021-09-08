@@ -4,6 +4,8 @@ import {isDateString} from '../utils/is';
 import dayjs from 'dayjs';
 import faker from 'faker';
 import isBetween from 'dayjs/plugin/isBetween';
+import validator from 'validator'
+
 dayjs.extend(isBetween);
 
 const additionalFunction = new Map<string, Function>()
@@ -11,8 +13,8 @@ export function addFunction(key:string,value:Function){
   additionalFunction.set(key, value)
 }
 
-export function deleteFunction(){
-  
+export function deleteFunction(key:string){
+  additionalFunction.delete(key)
 }
 
 addFunction('random', _.random)
@@ -20,9 +22,11 @@ addFunction('random', _.random)
 addFunction('fake', (strings:string[])=>{
   return faker.fake(strings[0])
 })
+
 addFunction('test', (val:string)=>{
   throw Error('测试 报错' + val)
 })
+
 addFunction('between',(...params:any[]) => {
   const [p1,p2] = params
   if(isDateString(p1) && isDateString(p2)){
@@ -43,5 +47,5 @@ export function getReserveFunc(){
     re[entry[0]] = entry[1]
     return re
   }, {} as {[key:string]:any})
-  return {R, _, dayjs, faker, ...addObj}
+  return {R, _, dayjs, faker, v:validator, ...addObj}
 }
