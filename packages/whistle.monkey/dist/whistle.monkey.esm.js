@@ -4,7 +4,7 @@ import fs from 'fs';
 import micromatch from 'micromatch';
 import path from 'path';
 import YAML from 'js-yaml';
-import { addFunction, getValueByStatement, generate } from '@zhangxin/mock-monkey-core';
+import { addFunction, generate, getValueByStatement } from '@zhangxin/mock-monkey-core';
 import findup from 'findup-sync';
 import Router from '@koa/router';
 import cors from '@koa/cors';
@@ -361,6 +361,50 @@ var rulesServer = (server => {
   server.on('request', app.callback());
 });
 
+// 跨域设置
+function handleCors(request, response) {
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Allow-Origin', request.headers['origin'] || '');
+  response.setHeader('Content-Type', 'application/json');
+  return 'next';
+}
+
+function handleDefault(request, response, rule, requestData) {
+  var _rule$response;
+
+  const filePath = decodeURIComponent(request.originalReq.ruleValue);
+  const body = generate(rule == null ? void 0 : (_rule$response = rule.response) == null ? void 0 : _rule$response.body, requestData);
+  const url = new URL(request.url || '', `http://${request.headers.host}`);
+  response.end(JSON.stringify(body), 'utf-8');
+  global.sendLog({
+    type: 'success',
+    message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
+    tags: ['命中']
+  });
+}
+
+function handleDelay(request, response, rule, requestData) {
+  if (typeof (rule == null ? void 0 : rule.delay) === 'number') {
+    var _rule$response;
+
+    const body = generate(rule == null ? void 0 : (_rule$response = rule.response) == null ? void 0 : _rule$response.body, requestData);
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    const filePath = decodeURIComponent(request.originalReq.ruleValue);
+    setTimeout(() => {
+      response.end(JSON.stringify(body), 'utf-8');
+      global.sendLog({
+        type: 'success',
+        message: `请求<span class="text-purple-500">${url.pathname}
+          </span>延迟${rule.delay}ms, 命中文件<span class="text-pink-500">${filePath}</span>`,
+        tags: ['命中']
+      });
+    }, rule.delay);
+    return;
+  }
+
+  return 'next';
+}
+
 function isEqual(statement, val, scope) {
   const result = getValueByStatement(statement, scope);
 
@@ -391,6 +435,31 @@ function isValid(father, child, scope) {
     }
   });
   return true;
+}
+
+function handleRequestDataMatch(request, response, rule, requestData) {
+  try {
+    var _rule$request;
+
+    isValid(requestData, rule == null ? void 0 : (_rule$request = rule.request) == null ? void 0 : _rule$request.body, requestData);
+  } catch (error) {
+    response.statusCode = 400;
+    response.statusMessage = error.message;
+    response.end(JSON.stringify({
+      code: 400,
+      message: error.message
+    }), 'utf-8');
+    const filePath = decodeURIComponent(request.originalReq.ruleValue);
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    global.sendLog({
+      type: 'error',
+      message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
+      tags: ['命中', '入参']
+    });
+    return;
+  }
+
+  return 'next';
 }
 
 const NEXT = 'next';
@@ -427,79 +496,7 @@ var server = (server => {
       });
     }
   });
-}); // 延迟功能
-
-function handleDelay(request, response, rule, requestData) {
-  if (typeof (rule == null ? void 0 : rule.delay) === 'number') {
-    var _rule$response;
-
-    const body = generate(rule == null ? void 0 : (_rule$response = rule.response) == null ? void 0 : _rule$response.body, requestData);
-    const url = new URL(request.url || '', `http://${request.headers.host}`);
-    const filePath = decodeURIComponent(request.originalReq.ruleValue);
-    setTimeout(() => {
-      response.end(JSON.stringify(body), 'utf-8');
-      global.sendLog({
-        type: 'success',
-        message: `请求<span class="text-purple-500">${url.pathname}
-          </span>延迟${rule.delay}ms, 命中文件<span class="text-pink-500">${filePath}</span>`,
-        tags: ['命中']
-      });
-    }, rule.delay);
-    return;
-  }
-
-  return NEXT;
-} // 跨域设置
-
-
-function handleCors(request, response) {
-  response.setHeader('Access-Control-Allow-Credentials', 'true');
-  response.setHeader('Access-Control-Allow-Origin', request.headers['origin'] || '');
-  response.setHeader('Content-Type', 'application/json');
-  return NEXT;
-} // 对入参的验证。
-
-
-function handleRequestDataMatch(request, response, rule, requestData) {
-  try {
-    var _rule$request;
-
-    isValid(requestData, rule == null ? void 0 : (_rule$request = rule.request) == null ? void 0 : _rule$request.body, requestData);
-  } catch (error) {
-    response.statusCode = 400;
-    response.statusMessage = error.message;
-    response.end(JSON.stringify({
-      code: 400,
-      message: error.message
-    }), 'utf-8');
-    const filePath = decodeURIComponent(request.originalReq.ruleValue);
-    const url = new URL(request.url || '', `http://${request.headers.host}`);
-    global.sendLog({
-      type: 'error',
-      message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>,但是参数有问题`,
-      tags: ['命中', '入参']
-    });
-    return;
-  }
-
-  return NEXT;
-} // 兜底方案
-
-
-function handleDefault(request, response, rule, requestData) {
-  var _rule$response2;
-
-  const filePath = decodeURIComponent(request.originalReq.ruleValue);
-  console.log(filePath, 'file');
-  const body = generate(rule == null ? void 0 : (_rule$response2 = rule.response) == null ? void 0 : _rule$response2.body, requestData);
-  const url = new URL(request.url || '', `http://${request.headers.host}`);
-  response.end(JSON.stringify(body), 'utf-8');
-  global.sendLog({
-    type: 'success',
-    message: `请求<span class="text-purple-500">${url.pathname}</span>命中文件<span class="text-pink-500">${filePath}</span>`,
-    tags: ['命中']
-  });
-}
+});
 
 function queue$1(items, params) {
   let isBreak = false;

@@ -9,6 +9,7 @@ var _ = _interopDefault(require('lodash'));
 var dayjs = _interopDefault(require('dayjs'));
 var faker = _interopDefault(require('faker'));
 var isBetween = _interopDefault(require('dayjs/plugin/isBetween'));
+var validator = _interopDefault(require('validator'));
 
 function isDateString(str = '') {
   if (typeof str !== 'string') {
@@ -79,6 +80,7 @@ function getReserveFunc() {
     _,
     dayjs,
     faker,
+    v: validator,
     ...addObj
   };
 }

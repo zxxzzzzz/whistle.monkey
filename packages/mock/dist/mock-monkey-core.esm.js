@@ -3,6 +3,7 @@ import _ from 'lodash-es';
 import dayjs from 'dayjs';
 import faker from 'faker';
 import isBetween from 'dayjs/plugin/isBetween';
+import validator from 'validator';
 
 function isDateString(str = '') {
   if (typeof str !== 'string') {
@@ -73,6 +74,7 @@ function getReserveFunc() {
     _,
     dayjs,
     faker,
+    v: validator,
     ...addObj
   };
 }

@@ -1,4 +1,4 @@
-import { Rule } from './interface';
+import { Rule } from '@/interface/rule';
 export declare function addRule(key: string, rule: Rule): void;
 export declare function updateRule(key: string, rule: Rule): void;
 export declare function deleteRule(key: string): void;
