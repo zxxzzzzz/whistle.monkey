@@ -351,7 +351,7 @@ var rulesServer = (server => {
     const href = ctx.request.href;
     const rule = getRuleByUrl(href);
 
-    if (rule) {
+    if (rule && rule.disabled === false) {
       const sendStr = encodeURIComponent(rule.filePath);
       ctx.body = `* monkey://${sendStr}`;
     } else {
@@ -408,8 +408,12 @@ function handleDelay(request, response, rule, requestData) {
 function isEqual(statement, val, scope) {
   const result = getValueByStatement(statement, scope);
 
-  if (typeof result === 'function') {
-    result(val);
+  try {
+    if (typeof result === 'function') {
+      result(val);
+    }
+  } catch (error) {
+    throw Error(`${result.name} 方法出错， ${error.message}`);
   }
 
   return val === result;

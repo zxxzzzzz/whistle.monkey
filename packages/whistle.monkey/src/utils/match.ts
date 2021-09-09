@@ -4,8 +4,12 @@ type cMap = { [key: string]: any }
 
 function isEqual(statement: string, val: any, scope: any) {
   const result = getValueByStatement(statement, scope);
-  if (typeof result === 'function') {
-    result(val);
+  try {
+    if (typeof result === 'function') {
+      result(val);
+    }
+  } catch (error) {
+    throw Error(`${result.name} 方法出错， ${error.message}`)
   }
   return val === result;
 }
