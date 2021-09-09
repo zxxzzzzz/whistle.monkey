@@ -1,0 +1,17 @@
+request:
+  url: queryPopularizeActivityList
+  # body:
+    # pageSize: v.isEmail
+response:
+  body:
+    code: 200
+    data:
+      'list<pageSize>':
+        orgName: '`门店名称${(currentPage - 1)*pageSize+index+1}`'
+        popularizerCellPhone: faker.phone.phoneNumber()
+        activityName:	活动名称	String
+        orderNo:	订单号	String
+        customerCellPhone:	客户手机号-参与人手机号	String
+        orderRealAmount:	random(1, 100, true)
+        activityTime:	faker.time.recent()
+      total: 100

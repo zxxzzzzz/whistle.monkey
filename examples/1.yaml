@@ -1,0 +1,189 @@
+request:
+  url: 'default'
+  body: {}
+response:
+  body:
+    code: 200
+    data:
+      details:
+        - annualStr: '2021-08-26'
+          carCategoryId: '50008558'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 奥迪 200 2.6L 1998 2.6 手动
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: hua
+          plateNumber: 苏A99880
+          username: '18455555555'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50002246'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 大众 B8 Variant/蔚揽(进口) 2.0T 2016 2.0TSI 双离合 380TSI 两驱逸行版
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 莫44
+          plateNumber: 苏A679809
+          username: '18452222222'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50043774'
+          carCategoryName: ''
+          carColor: 白
+          carModel: Alpina B4(进口) 3.0T 2016 Biturbo Coupe Allrad 3.0T 手自一体
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 谢谢
+          plateNumber: 藏A60RK0
+          username: '15358100213'
+          vcode: '14454655566322222'
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50044101'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 宝马 5系 2.0T 2020 530Li 2.0T 手自一体 尊享型 M运动套装
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 唐宇霆
+          plateNumber: 苏MCT131
+          username: '18636303146'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50002239'
+          carCategoryName: ''
+          carColor: 蓝
+          carModel: 大众 B8 Alltrack/蔚揽(进口) 2.0T 2018 2.0TSI 双离合 380TSI 四驱拓行版
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 谢谢
+          plateNumber: 苏A60RK0
+          username: '15358100213'
+          vcode: '11122222233333333'
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50008698'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 奥迪 A4L 1.8T 2016 1.8TFSI 手动 30TFSI 舒适型
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 丁玎
+          plateNumber: 苏AB1231
+          username: '18705194761'
+          vcode: LFV3A28K203094938
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50016950'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 云雀 Q1 1.4L 2018 1.4 序列变速 天窗导航版
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 啊
+          plateNumber: 苏A6790
+          username: '15454545458'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50043801'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 哪吒 N01 电动 2020 380t 行业定制版
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: 无车牌用户
+          plateNumber: 暂无
+          username: '15656898787'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50021908'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 富奇 富奇 2.4L 2004 2.4 手动 汽油 四驱版
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: zxw
+          plateNumber: 苏DF56677
+          username: '15720823102'
+          vcode: ''
+        - annualDate: null
+          annualStr: '2021-08-26'
+          carCategoryId: '50008809'
+          carCategoryName: ''
+          carColor: ''
+          carModel: 奥迪 A6L 1.8T 2017 1.8TFSI 双离合 技术型
+          ecode: ''
+          id: ''
+          insuranceCompanyId: null
+          insuranceCompanyName: ''
+          insuranceExpiryDate: null
+          insuranceExpiryDateTci: null
+          insuranceExpiryDateTciStr: '2021-08-26'
+          insuranceExpiryStr: '2021-08-26'
+          name: zxw
+          plateNumber: 苏ASD1W3
+          username: '15720823102'
+          vcode: '11122222222222222'
+      pageNum: null
+      pageSize: null
+      totalCount: '31'
+    message: SUCCESS
